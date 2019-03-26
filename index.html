@@ -50,7 +50,7 @@
 			<div class="title">Plot Settings</div>
 			<div class="row input-row-1">
 				<div class="label">Minimum t </div>
-				<input class="input-1 min-t" type="text" value="-pi*16" name="min-t">
+				<input class="input-1 min-t" type="text" value="0" name="min-t">
 			</div>	
 			<div class="row input-row-1">
 				<div class="label">Maximum t</div>
@@ -74,15 +74,15 @@
 			<div class="title real">Curve(t,k); k=time</div>	
 			<div class="row plot-row">
 				<div class="label">x(t,k)</div>
-				<input type="text" class="input x-plot" value="sin(t)*t*0.1" name="x-plot">
+				<input type="text" class="input x-plot" value="sin(t+mod(3k,2pi))*t*0.1" name="x-plot">
 			</div>
 			<div class="row plot-row">
 				<div class="label">y(t,k)</div>
-				<input type="text" class="input y-plot" value="t*0.12*cos(k)" name="y-plot">
+				<input type="text" class="input y-plot" value="t*0.12" name="y-plot">
 			</div>
 			<div class="row plot-row">
 				<div class="label">z(t,k)</div>
-				<input type="text" class="input z-plot" value="cos(t)*t*0.1" name="z-plot">
+				<input type="text" class="input z-plot" value="cos(t+mod(3k,2pi))*t*0.1" name="z-plot">
 			</div>
 			<div class="row plotit-row"><button class="plot-it">Apply</button></div>			
 		</div>
