@@ -58,27 +58,33 @@
 			</div>	
 			<div class="row input-row-1">
 				<div class="label">Step&nbsp;&nbsp;&nbsp;&nbsp;t</div>
-				<input class="input-1 step-t" type="text" value="pi/256" name="step-t">
+				<input class="input-1 step-t" type="text" value="pi/64" name="step-t">
 			</div>	
 		</div>
 		<div class="category">
 			<div class="title">Animation</div>
+			<div class="row input-row-1-nolabel">
+				<button class="input-1 toggle-button animation-state" name="animation-state">Off</button>
+			</div>
+			<div class="description" style="margin-top:2px;">
+				<div style="text-align:center">Time: <span class="animation-time">0.000</span></div>
+			</div>
 		</div>
 		<div class="category">		
-			<div class="title real">Curve(t)</div>
+			<div class="title real">Curve(t,k); k=time</div>	
 			<div class="row plot-row">
-				<div class="label">x(t)</div>
+				<div class="label">x(t,k)</div>
 				<input type="text" class="input x-plot" value="sin(t)*t*0.1" name="x-plot">
 			</div>
 			<div class="row plot-row">
-				<div class="label">y(t)</div>
-				<input type="text" class="input y-plot" value="t*0.12" name="y-plot">
+				<div class="label">y(t,k)</div>
+				<input type="text" class="input y-plot" value="t*0.12*cos(k)" name="y-plot">
 			</div>
 			<div class="row plot-row">
-				<div class="label">z(t)</div>
+				<div class="label">z(t,k)</div>
 				<input type="text" class="input z-plot" value="cos(t)*t*0.1" name="z-plot">
 			</div>
-			<div class="row plotit-row"><button class="plot-it">Plot it!</button></div>			
+			<div class="row plotit-row"><button class="plot-it">Apply</button></div>			
 		</div>
 	</div>
 </body></html>

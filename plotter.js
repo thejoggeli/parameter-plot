@@ -159,8 +159,10 @@ MiniGrid.resize = function(){
 }
 
 function Plotter(){}
+Plotter.time = 0;
 Plotter.line = null;
 Plotter.lineWidth = 0.002;
+Plotter.animation = false;
 Plotter.expression = {
 	x: "sin(t)", 
 	y: "cos(t)", 
@@ -177,17 +179,13 @@ Plotter.bounds = {
 Plotter.step = Math.PI*2.0/256.0;
 Plotter.plot = function(expression){
 	try {
-		console.log("it's plotting time");
-		Plotter.expression = expression;
-		Plotter.results = [];
+		if(expression !== undefined){
+			Plotter.expression = expression;
+		}
 		if(Plotter.line !== null){
+			Plotter.line.geometry.dispose();
 			scene.remove(Plotter.line.mesh);
 		}
-		
-		// offset
-		var offset = Plotter.offset = {};
-		offset.x = Plotter.bounds.min_x;
-		offset.z = Plotter.bounds.min_z;
 		Plotter.precalc();	
 		Plotter.plotLine();
 	} catch(e){
@@ -196,7 +194,12 @@ Plotter.plot = function(expression){
 	}
 	return true;
 }
+Plotter.setAnimationState = function(b){
+	Plotter.animation = b;
+}
 Plotter.precalc = function(){
+	Plotter.results = [];
+	var k = Plotter.time;
 	var expression = Plotter.expression;
 	var compiled = Plotter.compiledExpression = {};
 	compiled.x = math.compile(expression.x);
@@ -207,14 +210,18 @@ Plotter.precalc = function(){
 	for(var i = 0; i <= numSteps; i++){
 		var t = offset + i * Plotter.step;
 		var result = new THREE.Vector3(
-			compiled.x.eval({t:t})*Grid.scale.x,
-			compiled.y.eval({t:t})*Grid.scale.y,
-			compiled.z.eval({t:t})*Grid.scale.z
+			compiled.x.eval({t:t, k:k})*Grid.scale.x,
+			compiled.y.eval({t:t, k:k})*Grid.scale.y,
+			compiled.z.eval({t:t, k:k})*Grid.scale.z
 		);
 		Plotter.results.push(result);
 	}
 }
 Plotter.update = function(){
+	if(Plotter.animation){
+		Plotter.time += Time.deltaTime;
+		$(".animation-time").html(roundToFixed(Plotter.time, 3));
+	}
 	if(cameraMode == "perspective"){
 		Plotter.line.mesh.material.lineWidth = Plotter.lineWidth;
 	} else {

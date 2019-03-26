@@ -125,6 +125,7 @@ function update(){
 	directionalLight.position.set(camera.position.x, camera.position.y, camera.position.z);
 	MiniGrid.update();
 	Grid.update();
+	if(Plotter.animation) Plotter.plot();
 	Plotter.update();
 	// monitor stuffs
 	Monitor.set("FPS", Time.fps);
@@ -142,27 +143,6 @@ function render(){
 	MiniGrid.render();
 		
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -1,12 +1,22 @@
 function Ui(){}
 Ui.init = function(){
+	$("input[type=text]").on("change keyup", function(){
+		$(this).addClass("unsaved");
+		$(".plot-it").addClass("unsaved");
+	});
 	$(".plot-it").on("click", function(){
 		Ui.beginPlot();
 	});
-	$("#ui-1 input[type=text]").on("keydown", function(e){
+	$("#ui-1 input[type=text]").on("keyup", function(e){
 		if(e.keyCode == 13){
 			Ui.beginPlot();
 		}
+	});
+	$("input[type=text]").on("focus", function(){
+		$(this).addClass("has-focus");
+	});
+	$("input[type=text]").on("blur", function(){
+		$(this).removeClass("has-focus");
 	});
 	$("#ui-1 .minimize").on("click", function(){
 		$("#ui-1 .maximize").show();
@@ -33,6 +43,12 @@ Ui.init = function(){
 		Grid.grids.yz.visible = $(this).hasClass("active");
 		Ui.toCookie();
 	});
+	$(".animation-state").on("click", function(){
+		$(this).toggleClass("active");
+		Plotter.setAnimationState($(this).hasClass("active"));
+		$(this).text($(this).hasClass("active") ? "On" : "Off");
+		Ui.toCookie();
+	});
 	Ui.fromCookie();
 }
 
@@ -46,6 +62,7 @@ Ui.updateValues = function(){
 	else $(".grid.yz").removeClass("active");
 	if(Grid.grids.xy.visible) $(".grid.xy").addClass("active");
 	else $(".grid.xy").removeClass("active");
+	$(".animation-state").text($(".animation-state").hasClass("active") ? "On" : "Off");
 }
 
 Ui.applyValues = function(){
@@ -73,7 +90,6 @@ Ui.applyValues = function(){
 		console.error(e);
 		return false;
 	}	
-	console.log(Plotter.bounds);
 	Grid.scale.x = parseFloat($("input.x-scale").val());
 	Grid.scale.y = parseFloat($("input.y-scale").val());
 	Grid.scale.z = parseFloat($("input.z-scale").val());
@@ -82,6 +98,7 @@ Ui.applyValues = function(){
 	Grid.grids.yz.visible = $(".grid-yz").hasClass("active");
 	Ui.updateValues();
 	Ui.toCookie();
+	Plotter.setAnimationState($(".animation-state").hasClass("active"));
 	return true;
 }
 
@@ -94,6 +111,7 @@ Ui.beginPlot = function(){
 			y: $(".y-plot").val(),
 			z: $(".z-plot").val(),
 		};
+		$(".unsaved").removeClass("unsaved");
 		if(!Plotter.plot(expression)){
 			alert("Plot failed");
 		}
@@ -104,6 +122,7 @@ Ui.toggles = [
 	"grid-xz",
 	"grid-yz",
 	"grid-xy",
+//	"animation-state",
 ];
 Ui.fromCookie = function(){
 	$("#ui-1 input[type=text], #ui-1 input[type=range]").each(function(){
