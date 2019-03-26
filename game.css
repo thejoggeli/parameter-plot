@@ -24,7 +24,7 @@
 #ui-1 input[type="text"].expression-input {text-align:left;}
 
 
-#ui-1 .category {padding-bottom:2px;overflow-x:visible;position:relative;z-index:65000;}
+#ui-1 .category {padding-bottom:2px;overflow-x:visible;position:relative;}
 #ui-1 .title {background:black;color:white;padding:5px;margin-bottom:2px;font-weight:bold;}
 #ui-1 .row {padding:2px 5px;box-sizing:border-box;font-size:0;height:26px;overflow-x:visible;position:relative;}
 #ui-1 .row .label {width:76px;display:inline-block;color:black;font-size:12px;}
@@ -44,7 +44,7 @@
 #ui-1 .plotit-row button {width:100%;}
 #ui-1 .line-width {text-align:center;}
 #ui-1 {}
-#ui-1 .plot-row {position:relative;z-index:65000;}
+#ui-1 .plot-row {position:relative;}
 /*
 #ui-1 .plot-row input[type=text]:focus {
 	width:240px;position:absolute;right:5px;z-index:65000;
