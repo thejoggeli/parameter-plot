@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html><head>
+	<title>Der kurvige Plot</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<script src="jquery-3.2.1.min.js"></script>
+	<script src="jquery.cookie.js"></script>
+	<script src="THREE.js"></script>
+	<script src="THREE.OrbitControls.js"></script>
+	<script src="THREE.MeshLine.js"></script>
+	<script src="math.js"></script>
+	<script src="storage.js"></script>
+	<script src="plotter.js"></script>
+	<script src="game.js"></script>
+	<script src="ui.js"></script>
+	<script src="gfw.js"></script>
+	<link rel="stylesheet" type="text/css" href="gfw.css">
+	<link rel="stylesheet" type="text/css" href="game.css">
+</head><body>	
+	<div id="left-anchor" class="noselect">
+		<div id="monitor-box">
+			<div class="monitor-header">Monitor</div>
+		</div>
+		<div id="controls-box">
+			<div class="controls-header">Controls</div>
+		</div>
+	</div>
+	<div id="value-display">
+		<div class="input">f(3.2, 1.5)</div> = <div class="output">5.331</div>
+	</div>
+	<div id="ui-1">
+		<div class="minimize">-</div>
+		<div class="maximize">+</div>		
+		<div class="category">
+			<div class="title">Grid Visibility</div>
+			<div class="row input-row-3">
+				<button class="input-1 toggle-button grid-xz" name="grid-xz">XZ</button>
+				<button class="input-2 toggle-button grid-yz" name="grid-yz">YZ</button>
+				<button class="input-3 toggle-button grid-xy" name="grid-xy">XY</button>
+			</div>	
+		</div>
+		<div class="category">
+			<div class="title">Grid scale (x,y,z)</div>
+			<div class="row input-row-3">
+				<input type="text" class="input-1 x-scale" value="1.0" name="x-scale">
+				<input type="text" class="input-2 y-scale" value="1.0" name="y-scale">
+				<input type="text" class="input-3 z-scale" value="1.0" name="z-scale">
+			</div>
+		</div>
+		<div class="category">
+			<div class="title">Plot Settings</div>
+			<div class="row input-row-1">
+				<div class="label">Minimum t </div>
+				<input class="input-1 min-t" type="text" value="-pi*16" name="min-t">
+			</div>	
+			<div class="row input-row-1">
+				<div class="label">Maximum t</div>
+				<input class="input-2 max-t" type="text" value="pi*16" name="max-t">
+			</div>	
+			<div class="row input-row-1">
+				<div class="label">Step&nbsp;&nbsp;&nbsp;&nbsp;t</div>
+				<input class="input-1 step-t" type="text" value="pi/256" name="step-t">
+			</div>	
+		</div>
+		<div class="category">
+			<div class="title">Animation</div>
+		</div>
+		<div class="category">		
+			<div class="title real">Curve(t)</div>
+			<div class="row plot-row">
+				<div class="label">x(t)</div>
+				<input type="text" class="input x-plot" value="sin(t)*t*0.1" name="x-plot">
+			</div>
+			<div class="row plot-row">
+				<div class="label">y(t)</div>
+				<input type="text" class="input y-plot" value="t*0.12" name="y-plot">
+			</div>
+			<div class="row plot-row">
+				<div class="label">z(t)</div>
+				<input type="text" class="input z-plot" value="cos(t)*t*0.1" name="z-plot">
+			</div>
+			<div class="row plotit-row"><button class="plot-it">Plot it!</button></div>			
+		</div>
+	</div>
+</body></html>
