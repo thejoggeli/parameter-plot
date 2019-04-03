@@ -393,7 +393,7 @@ Plotter.createVolumeGroup = function(geometry){
 	if(Plotter.volumeShowMesh){
 		var frontMaterial = new THREE.MeshLambertMaterial({
 			color:0x00FFFF,
-			side: THREE.FrontSide,
+			side: THREE.DoubleSide,
 			polygonOffset: true,
 			polygonOffsetFactor: 1,
 			polygonOffsetUnits: 1,
@@ -401,7 +401,7 @@ Plotter.createVolumeGroup = function(geometry){
 		});
 		var mesh = new THREE.Mesh(geometry, frontMaterial);	
 		group.add(mesh);
-		var backMaterial = new THREE.MeshLambertMaterial({
+	/*	var backMaterial = new THREE.MeshLambertMaterial({
 			color:0xFF8800,
 			side: THREE.BackSide,
 			polygonOffset: true,
@@ -410,7 +410,7 @@ Plotter.createVolumeGroup = function(geometry){
 			depthTest: true, 
 		});
 		var mesh2 = new THREE.Mesh(geometry, backMaterial);	
-		group.add(mesh2);
+		group.add(mesh2); */
 	}	
 	if(Plotter.volumeShowWireframe){
 		var wireframeMaterial = new THREE.MeshBasicMaterial({
