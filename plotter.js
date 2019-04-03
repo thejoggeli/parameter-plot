@@ -161,6 +161,7 @@ MiniGrid.resize = function(){
 function Plotter(){}
 Plotter.time = 0;
 Plotter.line = null;
+Plotter.volume = null;
 Plotter.lineWidth = 0.002;
 Plotter.animation = false;
 Plotter.expression = {
@@ -183,11 +184,24 @@ Plotter.plot = function(expression){
 			Plotter.expression = expression;
 		}
 		if(Plotter.line !== null){
+			Plotter.line.mesh.material.dispose();
+			Plotter.line.mesh.geometry.dispose();
 			Plotter.line.geometry.dispose();
 			scene.remove(Plotter.line.mesh);
 		}
+		if(Plotter.volume !== null){
+			var group = Plotter.volume;
+			for (var i = group.children.length - 1; i >= 0; i--) {
+				group.children[i].material.dispose();
+				group.children[i].geometry.dispose();
+				scene.remove(group.children[i]);
+			}
+			scene.remove(Plotter.volume);
+		}
 		Plotter.precalc();	
 		Plotter.plotLine();
+		Plotter.plotVolumeAxis(new THREE.Vector3(1,0,0).normalize());
+	//	Plotter.plotVolumeLine(0.3);
 	} catch(e){
 		console.error(e);
 		return false;
@@ -245,3 +259,200 @@ Plotter.plotLine = function(){
 	var mesh = line.mesh = new THREE.Mesh(line.geometry, material);
 	scene.add(mesh);
 }
+Plotter.plotVolumeAxis = function(axis){
+	var frontMaterial = new THREE.MeshLambertMaterial({
+		color:0x00FFFF,
+		side: THREE.FrontSide,
+		wireframe: true,
+	});
+	var geometry = new THREE.Geometry();
+	// precalc matrices
+	var numAngles = 32;
+	var angleStep = angleStep = Math.PI*2 / numAngles;
+	var matrices = [];
+	for(var i = 0; i < numAngles; i++){
+		var mat = new THREE.Matrix4();
+		mat.makeRotationAxis(axis, i*angleStep);
+		matrices[i] = mat;
+	}
+	// generate vertices
+	var lineStep = 4;
+	var numSteps = 0;
+	for(var i = 0; i < Plotter.results.length; i += lineStep){
+		var v = Plotter.results[i];
+		for(var j = 0; j < numAngles; j++){
+			var vector = new THREE.Vector3(v.x, v.y, v.z);
+			vector.applyMatrix4(matrices[j]);
+			geometry.vertices.push(vector);
+		}
+		numSteps++;
+	}
+	// generate faces
+	var off = 0;
+	var iam = numAngles-1;
+	for(var i = 0; i < numSteps-1; i++){
+		for(var ia = 0; ia < numAngles; ia++){
+			var i1 = off;
+			var i2 = off+1;
+			if(iam == ia) i2 -= numAngles;
+			var i3 = i1+numAngles;
+			var i4 = i2+numAngles;
+			var face;
+			face = new THREE.Face3(i1, i2, i3);
+			face.materialIndex = 0;
+			geometry.faces.push(face);
+			face = new THREE.Face3(i4, i3, i2);
+			face.materialIndex = 0;
+			geometry.faces.push(face);
+			off++;
+		}
+	}
+	geometry.computeVertexNormals();
+	var mesh = new THREE.Mesh(geometry, frontMaterial);
+	
+	// clone
+	var mesh2 = mesh.clone();
+	var backMaterial = new THREE.MeshLambertMaterial({
+		color:0x006666,
+		side: THREE.BackSide,
+	});
+	mesh2.material = backMaterial;
+	if(frontMaterial.wireframe){
+		mesh2.visible = false;
+	}
+	
+	// group
+	var group = new THREE.Group();
+	group.add(mesh);
+	group.add(mesh2);
+	group.areaMesh = mesh;
+	Plotter.volume = group;
+	scene.add(group);	
+}
+Plotter.plotVolumeLine = function(radius){
+	var geometry = new THREE.Geometry();
+	var r = Plotter.results;
+	// generate vertices
+	var matrix = new THREE.Matrix4();
+	var numAngles = 32;
+	var angleStep = Math.PI*2/numAngles;
+	var point = new THREE.Vector3();
+	var axis = new THREE.Vector3();
+	var perp = new THREE.Vector3();
+	var lineStep = 4;
+	var numSteps = Math.floor((Plotter.results.length/lineStep));
+	var up = new THREE.Vector3(0,1,0);
+	for(var i = 0; i < numSteps; i++){
+		var r1 = (i-1)*lineStep;
+		var r2 = (i)*lineStep;
+		var r3 = (i+1)*lineStep;
+		if(r1 < 0) r1 = r2;
+		if(r3 >= Plotter.results.length) r3 = r2;	
+		point.set(r[r2].x, r[r2].y, r[r2].z);
+		axis.set(r[r3].x-r[r1].x, r[r3].y-r[r1].y, r[r3].z-r[r1].z);
+		axis.normalize();
+		perp.crossVectors(axis, up);
+		perp.setLength(radius);
+		for(var a = 0; a < numAngles; a++){
+			var angle = a*angleStep;
+			matrix.makeRotationAxis(axis, angle);
+			var v = perp.clone();
+			v.applyMatrix4(matrix);
+			v.add(point);
+			geometry.vertices.push(v);
+		}
+	}
+	// generate faces
+	var off = 0;
+	var iam = numAngles-1;
+	for(var i = 0; i < numSteps-1; i++){
+		for(var ia = 0; ia < numAngles; ia++){
+			var i1 = off;
+			var i2 = off+1;
+			if(iam == ia) i2 -= numAngles;
+			var i3 = i1+numAngles;
+			var i4 = i2+numAngles;
+			var face;
+			face = new THREE.Face3(i1, i2, i3);
+			face.materialIndex = 0;
+			geometry.faces.push(face);
+			face = new THREE.Face3(i4, i3, i2);
+			face.materialIndex = 0;
+			geometry.faces.push(face);
+			off++;
+		}
+	}
+	geometry.computeVertexNormals();
+	
+	// front mesh
+	var frontMaterial = new THREE.MeshLambertMaterial({
+		color:0x00FFFF,
+		side: THREE.FrontSide,
+	});
+	var mesh = new THREE.Mesh(geometry, frontMaterial);
+	
+	// back mesh
+	var backMaterial = new THREE.MeshLambertMaterial({
+		color:0x006666,
+		side: THREE.BackSide,
+	});
+	var mesh2 = mesh.clone();
+	mesh2.material = backMaterial; 
+	
+	// group
+	var group = new THREE.Group();
+	group.add(mesh);
+	group.add(mesh2);
+	group.areaMesh = mesh;
+	Plotter.volume = group;
+	scene.add(group);
+}
+Plotter.calcSurfaceArea = function(){
+	var mesh = Plotter.volume.areaMesh;
+	var area = 0;
+	var q = new THREE.Vector3();
+	var p = new THREE.Vector3();
+	var c = new THREE.Vector3();
+	for(var i = 0; i < mesh.geometry.faces.length; i++){
+		var face = mesh.geometry.faces[i];
+		var v1 = mesh.geometry.vertices[face.a];
+		var v2 = mesh.geometry.vertices[face.b];
+		var v3 = mesh.geometry.vertices[face.c];
+		q.subVectors(v3,v1);
+		p.subVectors(v3,v2);
+		c.crossVectors(q,p);
+		var length = c.length();
+		area += length/2;
+	}
+	return area;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -127,6 +127,9 @@ function update(){
 	Grid.update();
 	if(Plotter.animation) Plotter.plot();
 	Plotter.update();
+	if(Input.keyDown(48)){
+		console.log("Area: " + Plotter.calcSurfaceArea());
+	}
 	// monitor stuffs
 	Monitor.set("FPS", Time.fps);
 	Monitor.set("Camera", cameraMode == "ortho" ? "Orthographic" : "Perspective");
