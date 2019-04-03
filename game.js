@@ -129,6 +129,7 @@ function update(){
 	Plotter.update();
 	if(Input.keyDown(48)){
 		console.log("Area: " + Plotter.calcSurfaceArea());
+		console.log("Volume: " + Plotter.calcVolume());
 	}
 	// monitor stuffs
 	Monitor.set("FPS", Time.fps);

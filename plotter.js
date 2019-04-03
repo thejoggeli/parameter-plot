@@ -162,6 +162,11 @@ function Plotter(){}
 Plotter.time = 0;
 Plotter.line = null;
 Plotter.volume = null;
+Plotter.volumeStep = 4;
+Plotter.volumeAngles = 32;
+Plotter.volumeMode = "none";
+Plotter.volumeAxis = new THREE.Vector3();
+Plotter.volumeRadius = 0.3;
 Plotter.lineWidth = 0.002;
 Plotter.animation = false;
 Plotter.expression = {
@@ -196,17 +201,26 @@ Plotter.plot = function(expression){
 				group.children[i].geometry.dispose();
 				scene.remove(group.children[i]);
 			}
+			Plotter.volume.areaGeometry.dispose();
 			scene.remove(Plotter.volume);
 		}
 		Plotter.precalc();	
 		Plotter.plotLine();
-		Plotter.plotVolumeAxis(new THREE.Vector3(1,0,0).normalize());
-	//	Plotter.plotVolumeLine(0.3);
+		if(Plotter.volumeShowMesh || Plotter.volumeShowWireframe){
+			if(Plotter.volumeMode == "axis"){
+				Plotter.plotVolumeAxis();
+			} else if(Plotter.volumeMode == "line"){
+				Plotter.plotVolumeLine();
+			}
+		}
 	} catch(e){
 		console.error(e);
 		return false;
 	}
 	return true;
+}
+Plotter.setVolumeMode = function(mode){
+	
 }
 Plotter.setAnimationState = function(b){
 	Plotter.animation = b;
@@ -234,7 +248,7 @@ Plotter.precalc = function(){
 Plotter.update = function(){
 	if(Plotter.animation){
 		Plotter.time += Time.deltaTime;
-		$(".animation-time").html(roundToFixed(Plotter.time, 3));
+		$(".animation-state").html(Plotter.getTimeButtonString());
 	}
 	if(cameraMode == "perspective"){
 		Plotter.line.mesh.material.lineWidth = Plotter.lineWidth;
@@ -244,9 +258,12 @@ Plotter.update = function(){
 	Plotter.line.mesh.material.near = getCamera().near;
 	Plotter.line.mesh.material.far = getCamera().far;
 }
+Plotter.getTimeButtonString = function(){
+	return (Plotter.animation ? "On" : "Off") + ", k=" + roundToFixed(Plotter.time, 3);
+}
 Plotter.plotLine = function(){
 	var material = new MeshLineMaterial({
-		color:0xFFFFFF,
+		color: Plotter.volumeShowWireframe ? 0xFF00FF : 0xFFFFFF,
 		lineWidth: Plotter.lineWidth,	
 		sizeAttenuation: 0,
 	});
@@ -259,24 +276,25 @@ Plotter.plotLine = function(){
 	var mesh = line.mesh = new THREE.Mesh(line.geometry, material);
 	scene.add(mesh);
 }
-Plotter.plotVolumeAxis = function(axis){
+Plotter.plotVolumeAxis = function(){
+	Plotter.volumeAxis.normalize();
 	var frontMaterial = new THREE.MeshLambertMaterial({
 		color:0x00FFFF,
-		side: THREE.FrontSide,
-		wireframe: true,
+		side: THREE.DoubleSide,
+		wireframe: false,
 	});
 	var geometry = new THREE.Geometry();
 	// precalc matrices
-	var numAngles = 32;
+	var numAngles = Plotter.volumeAngles;
 	var angleStep = angleStep = Math.PI*2 / numAngles;
 	var matrices = [];
 	for(var i = 0; i < numAngles; i++){
 		var mat = new THREE.Matrix4();
-		mat.makeRotationAxis(axis, i*angleStep);
+		mat.makeRotationAxis(Plotter.volumeAxis, i*angleStep);
 		matrices[i] = mat;
 	}
 	// generate vertices
-	var lineStep = 4;
+	var lineStep = Plotter.volumeStep;
 	var numSteps = 0;
 	for(var i = 0; i < Plotter.results.length; i += lineStep){
 		var v = Plotter.results[i];
@@ -308,40 +326,23 @@ Plotter.plotVolumeAxis = function(axis){
 		}
 	}
 	geometry.computeVertexNormals();
-	var mesh = new THREE.Mesh(geometry, frontMaterial);
-	
-	// clone
-	var mesh2 = mesh.clone();
-	var backMaterial = new THREE.MeshLambertMaterial({
-		color:0x006666,
-		side: THREE.BackSide,
-	});
-	mesh2.material = backMaterial;
-	if(frontMaterial.wireframe){
-		mesh2.visible = false;
-	}
-	
-	// group
-	var group = new THREE.Group();
-	group.add(mesh);
-	group.add(mesh2);
-	group.areaMesh = mesh;
-	Plotter.volume = group;
-	scene.add(group);	
+	Plotter.createVolumeGroup(geometry);
 }
-Plotter.plotVolumeLine = function(radius){
+Plotter.plotVolumeLine = function(){
+	var radius = Plotter.volumeRadius;
 	var geometry = new THREE.Geometry();
 	var r = Plotter.results;
 	// generate vertices
 	var matrix = new THREE.Matrix4();
-	var numAngles = 32;
+	var numAngles = Plotter.volumeAngles;
 	var angleStep = Math.PI*2/numAngles;
 	var point = new THREE.Vector3();
 	var axis = new THREE.Vector3();
 	var perp = new THREE.Vector3();
-	var lineStep = 4;
-	var numSteps = Math.floor((Plotter.results.length/lineStep));
+	var lineStep = Plotter.volumeStep;
+	var numSteps = Math.floor(((Plotter.results.length+lineStep-1)/lineStep));
 	var up = new THREE.Vector3(0,1,0);
+	var vert = new THREE.Vector3();
 	for(var i = 0; i < numSteps; i++){
 		var r1 = (i-1)*lineStep;
 		var r2 = (i)*lineStep;
@@ -351,15 +352,17 @@ Plotter.plotVolumeLine = function(radius){
 		point.set(r[r2].x, r[r2].y, r[r2].z);
 		axis.set(r[r3].x-r[r1].x, r[r3].y-r[r1].y, r[r3].z-r[r1].z);
 		axis.normalize();
-		perp.crossVectors(axis, up);
+		perp.crossVectors(axis, up);	
 		perp.setLength(radius);
-		for(var a = 0; a < numAngles; a++){
-			var angle = a*angleStep;
-			matrix.makeRotationAxis(axis, angle);
-			var v = perp.clone();
-			v.applyMatrix4(matrix);
+		matrix.makeRotationAxis(axis, angleStep);
+		var v = perp.clone();
+		v.add(point);
+		geometry.vertices.push(v);	
+		for(var a = 1; a < numAngles; a++){
+			perp.applyMatrix4(matrix);			
+			v = perp.clone();
 			v.add(point);
-			geometry.vertices.push(v);
+			geometry.vertices.push(v);	
 		}
 	}
 	// generate faces
@@ -383,41 +386,56 @@ Plotter.plotVolumeLine = function(radius){
 		}
 	}
 	geometry.computeVertexNormals();
-	
-	// front mesh
-	var frontMaterial = new THREE.MeshLambertMaterial({
-		color:0x00FFFF,
-		side: THREE.FrontSide,
-	});
-	var mesh = new THREE.Mesh(geometry, frontMaterial);
-	
-	// back mesh
-	var backMaterial = new THREE.MeshLambertMaterial({
-		color:0x006666,
-		side: THREE.BackSide,
-	});
-	var mesh2 = mesh.clone();
-	mesh2.material = backMaterial; 
-	
-	// group
+	Plotter.createVolumeGroup(geometry);
+}
+Plotter.createVolumeGroup = function(geometry){	
 	var group = new THREE.Group();
-	group.add(mesh);
-	group.add(mesh2);
-	group.areaMesh = mesh;
+	if(Plotter.volumeShowMesh){
+		var frontMaterial = new THREE.MeshLambertMaterial({
+			color:0x00FFFF,
+			side: THREE.FrontSide,
+			polygonOffset: true,
+			polygonOffsetFactor: 1,
+			polygonOffsetUnits: 1,
+			depthTest: true, 
+		});
+		var mesh = new THREE.Mesh(geometry, frontMaterial);	
+		group.add(mesh);
+		var backMaterial = new THREE.MeshLambertMaterial({
+			color:0xFF8800,
+			side: THREE.BackSide,
+			polygonOffset: true,
+			polygonOffsetFactor: 1,
+			polygonOffsetUnits: 1,
+			depthTest: true, 
+		});
+		var mesh2 = new THREE.Mesh(geometry, backMaterial);	
+		group.add(mesh2);
+	}	
+	if(Plotter.volumeShowWireframe){
+		var wireframeMaterial = new THREE.MeshBasicMaterial({
+			color:0xFFFFFF,
+			side: THREE.DoubleSide,
+			wireframe: true,
+		});
+		var mesh = new THREE.Mesh(geometry, wireframeMaterial);	
+		group.add(mesh);
+	}	
+	group.areaGeometry = geometry;
 	Plotter.volume = group;
-	scene.add(group);
+	scene.add(group);	
 }
 Plotter.calcSurfaceArea = function(){
-	var mesh = Plotter.volume.areaMesh;
+	var geometry = Plotter.volume.areaGeometry;
 	var area = 0;
 	var q = new THREE.Vector3();
 	var p = new THREE.Vector3();
 	var c = new THREE.Vector3();
-	for(var i = 0; i < mesh.geometry.faces.length; i++){
-		var face = mesh.geometry.faces[i];
-		var v1 = mesh.geometry.vertices[face.a];
-		var v2 = mesh.geometry.vertices[face.b];
-		var v3 = mesh.geometry.vertices[face.c];
+	for(var i = 0; i < geometry.faces.length; i++){
+		var face = geometry.faces[i];
+		var v1 = geometry.vertices[face.a];
+		var v2 = geometry.vertices[face.b];
+		var v3 = geometry.vertices[face.c];
 		q.subVectors(v3,v1);
 		p.subVectors(v3,v2);
 		c.crossVectors(q,p);
@@ -426,7 +444,18 @@ Plotter.calcSurfaceArea = function(){
 	}
 	return area;
 }
-
+Plotter.calcVolume = function(){
+	var points = Plotter.results;
+	var volume = 0;
+	for(var i = 1; i < points.length; i++){
+		var p1 = points[i-1];
+		var p2 = points[i];
+		var r = (p1.y+p2.y)/2;
+		var h = p2.x-p1.x;
+		volume += Math.PI*r*r*h;
+	}
+	return volume;
+}
 
 
 

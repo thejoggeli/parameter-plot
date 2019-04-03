@@ -31,15 +31,12 @@
 		<div class="minimize">-</div>
 		<div class="maximize">+</div>		
 		<div class="category">
-			<div class="title">Grid Visibility</div>
+			<div class="title">Grid</div>
 			<div class="row input-row-3">
 				<button class="input-1 toggle-button grid-xz" name="grid-xz">XZ</button>
 				<button class="input-2 toggle-button grid-yz" name="grid-yz">YZ</button>
 				<button class="input-3 toggle-button grid-xy" name="grid-xy">XY</button>
 			</div>	
-		</div>
-		<div class="category">
-			<div class="title">Grid scale (x,y,z)</div>
 			<div class="row input-row-3">
 				<input type="text" class="input-1 x-scale" value="1.0" name="x-scale">
 				<input type="text" class="input-2 y-scale" value="1.0" name="y-scale">
@@ -71,25 +68,26 @@
 				<div class="label">Num Angles</div>
 				<input class="input-1 volume-angles" type="text" value="32" name="volume-angles">
 			</div>	
-			<div class="row input-row-3-label">
-				<div class="label">Axis</div>
-				<input type="text" class="volume-axis-x" value="1.0" name="volume-axis-x">
-				<input type="text" class="volume-axis-y" value="0.0" name="volume-axis-y">
-				<input type="text" class="volume-axis-z" value="0.0" name="volume-axis-z">
+			<div class="row input-row-2">
+				<div class="label">Axis/Size</div>
+				<input class="input-1 volume-axis" type="text" value="1,0,0" name="volume-axis" placeholder="Axis" title="Axis">
+				<input class="input-2 volume-radius" type="text" value="0.3" name="volume-radius" placeholder="Radius" title="Radius">
 			</div>
-			<div class="row input-row-3">
-				<button class="input-1 volume-mode volume-mode-none" name="volume-mode-none">None</button>
-				<button class="input-2 volume-mode volume-mode-line" name="volume-mode-line">Line</button>
-				<button class="input-3 volume-mode volume-mode-axis" name="volume-mode-axis">Axis</button>
+			<div class="row input-row-2">
+				<div class="label">Mode</div>				
+				<button class="input-1 volume-mode volume-mode-axis toggle-button" name="volume-mode-axis">Axis</button>
+				<button class="input-2 volume-mode volume-mode-line toggle-button" name="volume-mode-line">Line</button>				
+			</div>
+			<div class="row input-row-2">
+				<div class="label">Display</div>
+				<button class="input-1 volume-mesh toggle-button active" name="volume-mesh">Mesh</button>
+				<button class="input-2 volume-wireframe toggle-button" name="volume-wireframe">Grid</button>
 			</div>
 		</div>
 		<div class="category">
 			<div class="title">Animation</div>
 			<div class="row input-row-1-nolabel">
-				<button class="input-1 toggle-button animation-state" name="animation-state">Off</button>
-			</div>
-			<div class="description" style="margin-top:2px;">
-				<div style="text-align:center">Time: <span class="animation-time">0.000</span></div>
+				<button class="input-1 toggle-button animation-state" name="animation-state">Off, k=0.000</button>
 			</div>
 		</div>
 		<div class="category">		

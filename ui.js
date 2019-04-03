@@ -46,8 +46,52 @@ Ui.init = function(){
 	$(".animation-state").on("click", function(){
 		$(this).toggleClass("active");
 		Plotter.setAnimationState($(this).hasClass("active"));
-		$(this).text($(this).hasClass("active") ? "On" : "Off");
+		$(".animation-state").html(Plotter.getTimeButtonString());
 		Ui.toCookie();
+	});
+	$(".volume-mode-axis").on("click", function(){
+		$(this).toggleClass("active");
+		var active = $(this).hasClass("active");
+		$(".volume-mode").removeClass("active");
+		Plotter.volumeMode = "none";
+		if(active){
+			$(this).addClass("active");
+			Plotter.volumeMode = "axis";
+		}
+		Ui.applyValues();
+		Plotter.plot();
+	});
+	$(".volume-mode-line").on("click", function(){
+		$(this).toggleClass("active");
+		var active = $(this).hasClass("active");
+		$(".volume-mode").removeClass("active");
+		Plotter.volumeMode = "none";
+		if(active){
+			$(this).addClass("active");
+			Plotter.volumeMode = "line";
+		}
+		Ui.applyValues();
+		Plotter.plot();
+	});
+	$(".volume-mesh").on("click", function(){
+		$(this).toggleClass("active");
+		Ui.applyValues();
+		Plotter.plot();		
+	});
+	$(".volume-wireframe").on("click", function(){
+		$(this).toggleClass("active");
+		Ui.applyValues();
+		Plotter.plot();			
+	});
+	$(".volume-radius").on("keyup", function(e){
+		if(e.keyCode == 13 && !$(".volume-mode-line").hasClass("active")){
+			$(".volume-mode-line").trigger("click");
+		}
+	});
+	$(".volume-axis").on("keyup", function(e){
+		if(e.keyCode == 13 && !$(".volume-mode-axis").hasClass("active")){
+			$(".volume-mode-axis").trigger("click");
+		}
 	});
 	Ui.fromCookie();
 }
@@ -62,7 +106,10 @@ Ui.updateValues = function(){
 	else $(".grid.yz").removeClass("active");
 	if(Grid.grids.xy.visible) $(".grid.xy").addClass("active");
 	else $(".grid.xy").removeClass("active");
-	$(".animation-state").text($(".animation-state").hasClass("active") ? "On" : "Off");
+	$(".animation-state").html(Plotter.getTimeButtonString());
+	$(".volume-mode").removeClass("active");
+	if(Plotter.volumeMode == "axis") $(".volume-mode-axis").addClass("active");
+	if(Plotter.volumeMode == "line") $(".volume-mode-line").addClass("active");
 }
 
 Ui.applyValues = function(){
@@ -96,9 +143,25 @@ Ui.applyValues = function(){
 	Grid.grids.xy.visible = $(".grid-xy").hasClass("active");
 	Grid.grids.xz.visible = $(".grid-xz").hasClass("active");
 	Grid.grids.yz.visible = $(".grid-yz").hasClass("active");
+	Plotter.volumeMode = "none";
+	if($(".volume-mode-axis").hasClass("active")) Plotter.volumeMode = "axis";
+	if($(".volume-mode-line").hasClass("active")) Plotter.volumeMode = "line";
+	Plotter.volumeStep = parseFloat($(".volume-step").val());
+	Plotter.volumeAngles = parseFloat($(".volume-angles").val());
 	Ui.updateValues();
-	Ui.toCookie();
 	Plotter.setAnimationState($(".animation-state").hasClass("active"));
+	Plotter.volumeRadius = parseFloat($(".volume-radius").val());
+	var split = $(".volume-axis").val().split(",");
+	if(split.length < 3){
+		alert("invalid axis format: " + $(".volume-axis").val() + "\ntry: x,y,z");
+	} else {
+		Plotter.volumeAxis.x = parseFloat(split[0]);
+		Plotter.volumeAxis.y = parseFloat(split[1]);
+		Plotter.volumeAxis.z = parseFloat(split[2]);
+	}
+	Plotter.volumeShowMesh = $(".volume-mesh").hasClass("active");
+	Plotter.volumeShowWireframe = $(".volume-wireframe").hasClass("active");
+	Ui.toCookie();
 	return true;
 }
 
@@ -122,6 +185,10 @@ Ui.toggles = [
 	"grid-xz",
 	"grid-yz",
 	"grid-xy",
+	"volume-mode-axis",
+	"volume-mode-line",
+	"volume-mesh",
+	"volume-wireframe",
 //	"animation-state",
 ];
 Ui.fromCookie = function(){
